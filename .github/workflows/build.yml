@@ -26,6 +26,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
       - name: Log in to the Container registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
@@ -39,15 +45,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          target: base
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push Docker image (China)
-        id: push-china
-        uses: docker/build-push-action@v6
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v3
         with:
-          context: .
-          target: china
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:china
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

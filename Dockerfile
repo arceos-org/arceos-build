@@ -39,8 +39,3 @@ RUN cargo install cargo-binutils axconfig-gen cargo-axplat
 WORKDIR /workspace
 
 CMD ["bash", "-l"]
-
-FROM base AS china
-
-COPY debian.sources /etc/apt/sources.list.d/debian.sources
-COPY dot_cargo_config.toml $CARGO_HOME/config.toml
